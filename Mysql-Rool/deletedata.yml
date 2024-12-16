@@ -1,6 +1,6 @@
 ---
 - name: Manage MySQL Database
-  hosts: all
+  hosts: aws_ec2
   become: true
   vars:
     db_user: mysqluser
