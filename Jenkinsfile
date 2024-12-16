@@ -71,7 +71,7 @@ pipeline{
             }
             steps {
                 ansiblePlaybook credentialsId: '9cf7a925-98af-41f4-92b1-27f00931f536', disableHostKeyChecking: true, installation: 'ansible',
-                inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_CR_PATH}'
+                inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_DT_PATH}'
             }
         }
     }
