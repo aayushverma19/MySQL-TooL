@@ -4,10 +4,10 @@ pipeline{
         ansible 'ansible'
     }
     environment {
-                TERRA_PATH = "${WORKSPACE}/Mysql-Terraform"
-                ANSIBLE_PLAY_CR_PATH = "${WORKSPACE}/assignment5/toolbook.yml"
-                ANSIBLE_PLAY_DT_PATH = "${WORKSPACE}/assignment5/deletedata.yml"
-                ANSIBLE_INVENTORY = "${WORKSPACE}/assignment5/aws_ec2.yml"
+                TERRA_PATH = "${WORKSPACE}/Mysql-Infra"
+                ANSIBLE_PLAY_CR_PATH = "${WORKSPACE}/Mysql-Rool/Mysql.yml"
+                ANSIBLE_PLAY_DT_PATH = "${WORKSPACE}/Mysql-Rool/deletedata.yml"
+                ANSIBLE_INVENTORY = "${WORKSPACE}/Mysql-Rool/aws_ec2.yml"
             }
     parameters {
         choice(name: 'action', choices: ['apply', 'destroy'], description: 'choices one option for create/destroy infra')
@@ -17,7 +17,7 @@ pipeline{
     stages {
         stage ('git_clone'){
             steps {
-                git branch: 'main', url: 'https://github.com/aayushverma191/mysqlpvtinstance.git'
+                git branch: 'main', url: 'https://github.com/aayushverma19/MySQL-TooL.git'
             }
         }
         stage ('user_approval') {
@@ -61,7 +61,7 @@ pipeline{
                   expression { params.table == 'create' && params.action == 'apply' }
               }
               steps {
-                    ansiblePlaybook credentialsId: '2a4dea98-3c79-4475-908f-9f764acd5762', disableHostKeyChecking: true, installation: 'ansible',
+                    ansiblePlaybook credentialsId: '9cf7a925-98af-41f4-92b1-27f00931f536', disableHostKeyChecking: true, installation: 'ansible',
                     inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_CR_PATH}'
               }
           }
@@ -70,7 +70,7 @@ pipeline{
                   expression { params.table == 'delete' && params.action == 'apply' }
             }
             steps {
-                ansiblePlaybook credentialsId: '2a4dea98-3c79-4475-908f-9f764acd5762', disableHostKeyChecking: true, installation: 'ansible',
+                ansiblePlaybook credentialsId: '9cf7a925-98af-41f4-92b1-27f00931f536', disableHostKeyChecking: true, installation: 'ansible',
                 inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_CR_PATH}'
             }
         }
