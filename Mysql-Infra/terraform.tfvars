@@ -88,4 +88,4 @@ lb_enable_deletion       = true
 alb_listener_port        = 80
 alb_listener_protocol    = "HTTP"
 alb_listener_action      = "forward"
-enable_deletion          = true
+enable_deletion          = false
