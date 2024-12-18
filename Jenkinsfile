@@ -4,7 +4,7 @@ pipeline{
         ansible 'ansible'
     }
     environment {
-                TERRA_PATH = "${WORKSPACE}/Mysql-Infra"
+                TERRAFORM_DIR_PATH = "${WORKSPACE}/Mysql-Infra"
                 ANSIBLE_PLAY_CR_PATH = "${WORKSPACE}/Mysql-Rool/Mysql.yml"
                 ANSIBLE_PLAY_DT_PATH = "${WORKSPACE}/Mysql-Rool/deletedata.yml"
                 ANSIBLE_INVENTORY = "${WORKSPACE}/Mysql-Rool/aws_ec2.yml"
@@ -24,7 +24,7 @@ pipeline{
                   expression { params.table != 'delete' || params.action == 'destroy' }
               }
             steps {
-                sh 'terraform -chdir=${TERRA_PATH} init'
+                sh 'terraform -chdir=${TERRAFORM_DIR_PATH} init'
             }
         }
         stage ('terraform validate') {
@@ -32,7 +32,7 @@ pipeline{
                   expression {  params.table != 'delete' || params.action == 'destroy' }
             }
             steps {
-                sh 'terraform -chdir=${TERRA_PATH} validate'
+                sh 'terraform -chdir=${TERRAFORM_DIR_PATH} validate'
             }
         }
         stage ('terraform plan') {
@@ -40,7 +40,7 @@ pipeline{
                   expression {  params.table != 'delete' || params.action == 'destroy' }
             }
             steps {
-                sh 'terraform -chdir=${TERRA_PATH} plan'
+                sh 'terraform -chdir=${TERRAFORM_DIR_PATH} plan'
             }
         }
         stage ('approval apply') {
@@ -56,7 +56,7 @@ pipeline{
                  expression { params.action == 'apply' && params.table != 'delete' }
             }
             steps {
-                sh 'terraform -chdir=${TERRA_PATH} apply --auto-approve'
+                sh 'terraform -chdir=${TERRAFORM_DIR_PATH} apply --auto-approve'
             }
         }
         stage ('approval destroy') {
@@ -72,7 +72,7 @@ pipeline{
                   expression { params.action == 'destroy'  || ( params.table != 'delete' && params.table != 'create' )}
             }
             steps {
-                sh 'terraform -chdir=${TERRA_PATH} destroy --auto-approve'
+                sh 'terraform -chdir=${TERRAFORM_DIR_PATH} destroy --auto-approve'
             }
         }
         stage("Install_MySQL_Create-Table") {
@@ -103,11 +103,19 @@ pipeline{
         }
     }
     post {
-            success {
-                    slackSend(channel: 'info', message: "Build Successful: JOB-Name:- ${JOB_NAME} Build_No.:- ${BUILD_NUMBER} & Build-URL:- ${BUILD_URL}")
+        success {
+            script {
+                if (params.table == 'create' && params.action == 'apply') {
+                    slackSend(channel: 'info', message: "Apply Successful and created MySQL table: JOB-Name: ${JOB_NAME}, Build No.: ${BUILD_NUMBER}, Build URL: ${BUILD_URL}")
+                } else if (params.action == 'destroy' || (params.table != 'delete' && params.table != 'create')) {
+                    slackSend(channel: 'info', message: "Destroy Successful: JOB-Name: ${JOB_NAME}, Build No.: ${BUILD_NUMBER}, Build URL: ${BUILD_URL}")
+                } else if (params.table == 'delete' && params.action == 'apply') {
+                    slackSend(channel: 'info', message: "Table Deleted Successfully: JOB-Name: ${JOB_NAME}, Build No.: ${BUILD_NUMBER}, Build URL: ${BUILD_URL}")
                 }
-            failure {
-                    slackSend(channel: 'info', message: "Build Failure: JOB-Name:- ${JOB_NAME} Build_No.:- ${BUILD_NUMBER} & Build-URL:- ${BUILD_URL}")
-                }
+            }
+        }
+        failure {
+            slackSend(channel: 'info', message: "Build Failure: JOB-Name:- ${JOB_NAME} Build_No.:- ${BUILD_NUMBER} & Build-URL:- ${BUILD_URL}")
+        }
     }
 }
