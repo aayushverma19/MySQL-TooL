@@ -48,7 +48,7 @@ pipeline{
                  expression { params.action == 'apply' && params.table != 'delete' }
             }
             steps {
-                input message: 'Approval for infra' , ok: 'Approved'
+                input message: 'Approval for infra apply' , ok: 'Approved'
             }
         }
         stage ('terraform apply') {
@@ -64,7 +64,7 @@ pipeline{
                   expression { params.action == 'destroy'  || ( params.table != 'delete' && params.table != 'create' )}
             }
             steps {
-                input message: 'Approval for infra' , ok: 'Approved'
+                input message: 'Approval for infra destory' , ok: 'Approved'
             }
         }
         stage ('terraform destroy') {
@@ -89,7 +89,7 @@ pipeline{
                 expression { params.table == 'delete' && params.action == 'apply' }
             }
             steps {
-                input message: 'Approval for infra' , ok: 'Approved'
+                input message: 'Approval for table delete' , ok: 'Approved'
             }
         }
         stage("Delete-Table") {
