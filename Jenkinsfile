@@ -13,44 +13,63 @@ pipeline{
         choice(name: 'action', choices: ['apply', 'destroy'], description: 'choices one option for create/destroy infra')
         choice(name: 'table', choices: ['create', 'delete'], description: 'Choose the action Create or Delete the Table')
     }
-    
     stages {
         stage ('git_clone'){
             steps {
-                git branch: 'main', url: 'https://github.com/aayushverma19/MySQL-TooL.git'
-            }
-        }
-        stage ('user_approval') {
-            steps {
-                input message: 'Approval for infra' , ok: 'Approved'
+                git branch: 'main', url: 'https://github.com/aayushverma191/region.git'
             }
         }
         stage ('terraform init') {
+            when { 
+                  expression { params.table != 'delete' || params.action == 'destroy' }
+              }
             steps {
                 sh 'terraform -chdir=${TERRA_PATH} init'
             }
         }
         stage ('terraform validate') {
+            when { 
+                  expression {  params.table != 'delete' || params.action == 'destroy' }
+            }
             steps {
                 sh 'terraform -chdir=${TERRA_PATH} validate'
             }
         }
         stage ('terraform plan') {
+            when { 
+                  expression {  params.table != 'delete' || params.action == 'destroy' }
+            }
             steps {
                 sh 'terraform -chdir=${TERRA_PATH} plan'
             }
         }
+        stage ('approval apply') {
+            when { 
+                 expression { params.action == 'apply' && params.table != 'delete' }
+            }
+            steps {
+                input message: 'Approval for infra' , ok: 'Approved'
+            }
+        }
         stage ('terraform apply') {
             when { 
-                  expression { params.action == 'apply' }
+                 expression { params.action == 'apply' && params.table != 'delete' }
             }
             steps {
                 sh 'terraform -chdir=${TERRA_PATH} apply --auto-approve'
             }
         }
+        stage ('approval destroy') {
+            when { 
+                  expression { params.action == 'destroy'  || ( params.table != 'delete' && params.table != 'create' )}
+            }
+            steps {
+                input message: 'Approval for infra' , ok: 'Approved'
+            }
+        }
         stage ('terraform destroy') {
             when { 
-                  expression { params.action == 'destroy' }
+                  expression { params.action == 'destroy'  || ( params.table != 'delete' && params.table != 'create' )}
             }
             steps {
                 sh 'terraform -chdir=${TERRA_PATH} destroy --auto-approve'
@@ -61,16 +80,24 @@ pipeline{
                   expression { params.table == 'create' && params.action == 'apply' }
               }
               steps {
-                    ansiblePlaybook credentialsId: '9cf7a925-98af-41f4-92b1-27f00931f536', disableHostKeyChecking: true, installation: 'ansible',
+                    ansiblePlaybook credentialsId: '98a085ea-0055-4363-9382-81b2371ec021', disableHostKeyChecking: true, installation: 'ansible',
                     inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_CR_PATH}'
               }
           }
+        stage ('delete table approval') {
+            when { 
+                expression { params.table == 'delete' && params.action == 'apply' }
+            }
+            steps {
+                input message: 'Approval for infra' , ok: 'Approved'
+            }
+        }
         stage("Delete-Table") {
             when { 
                   expression { params.table == 'delete' && params.action == 'apply' }
             }
             steps {
-                ansiblePlaybook credentialsId: '9cf7a925-98af-41f4-92b1-27f00931f536', disableHostKeyChecking: true, installation: 'ansible',
+                ansiblePlaybook credentialsId: '98a085ea-0055-4363-9382-81b2371ec021', disableHostKeyChecking: true, installation: 'ansible',
                 inventory: '${ANSIBLE_INVENTORY}' , playbook: '${ANSIBLE_PLAY_DT_PATH}'
             }
         }
